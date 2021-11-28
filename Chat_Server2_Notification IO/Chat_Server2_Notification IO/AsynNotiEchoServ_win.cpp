@@ -10,6 +10,8 @@ void CompressSockets(SOCKET hSockArr[], int idx, int total);
 void CompressEvents(WSAEVENT hEventArr[], int idx, int total);
 void ErrorHandling(const char *msg);
 
+// 실행 안되는 문제 발생
+
 int main(int argc, char *argv[])
 {
 	WSADATA wsaData;
@@ -61,6 +63,7 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
+		printf("TEST\n");
 		posInfo = WSAWaitForMultipleEvents(numOfClntSock, hEventArr, FALSE, WSA_INFINITE, FALSE);
 		startIdx = posInfo - WSA_WAIT_EVENT_0;
 
