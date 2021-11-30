@@ -50,6 +50,11 @@ int main(int argc, char *argv[])
 		ErrorHandling("bind() error");
 	}
 
+	if (listen(hServSock, 5) == SOCKET_ERROR)
+	{
+		ErrorHandling("listen() Error!");
+	}
+
 	newEvent = WSACreateEvent();
 	if (WSAEventSelect(hServSock, newEvent, FD_ACCEPT) == SOCKET_ERROR)
 	{
@@ -61,9 +66,9 @@ int main(int argc, char *argv[])
 	hEventArr[numOfClntSock] = newEvent;
 	numOfClntSock++;
 
+	printf("Server is Runned!\n");
 	while (1)
-	{
-		printf("TEST\n");
+	{;
 		posInfo = WSAWaitForMultipleEvents(numOfClntSock, hEventArr, FALSE, WSA_INFINITE, FALSE);
 		startIdx = posInfo - WSA_WAIT_EVENT_0;
 
@@ -93,7 +98,7 @@ int main(int argc, char *argv[])
 					hEventArr[numOfClntSock] = newEvent;
 					hSockArr[numOfClntSock] = hClntSock;
 					numOfClntSock++;
-					puts("connected new client...");
+					printf("connected new client...Count :%d\n",numOfClntSock);
 				}
 
 				if (netEvents.lNetworkEvents & FD_READ) //  데이터 수신 시

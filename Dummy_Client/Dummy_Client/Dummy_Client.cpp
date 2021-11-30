@@ -9,7 +9,7 @@
 #pragma comment (lib,"ws2_32.lib")
 #define BUF_SIZE 100
 #define NAME_SIZE 20
-#define TEST_USER 50
+#define TEST_USER 150
 
 unsigned WINAPI SendMsg(void *arg);
 unsigned WINAPI RecvMsg(void *arg);
