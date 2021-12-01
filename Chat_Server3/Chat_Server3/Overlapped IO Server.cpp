@@ -7,7 +7,7 @@
 #pragma warning (disable:4996)
 
 void CALLBACK ReadCompRoutine(DWORD, DWORD, LPWSAOVERLAPPED, DWORD);
-void CALLBACK WritecompRoutine(DWORD, DWORD, LPWSAOVERLAPPED, DWORD);
+void CALLBACK WriteCompRoutine(DWORD, DWORD, LPWSAOVERLAPPED, DWORD);
 void ErrorHandling(const char * message);
 
 typedef struct
@@ -83,4 +83,41 @@ int main(int argc, char *argv[])
 	closesocket(hLisnSock);
 	WSACleanup();
 	return 0;
+}
+void CALLBACK ReadCompRoutine(DWORD dwError, DWORD szRecvBytes, LPWSAOVERLAPPED lpOverlapped, DWORD flags)
+{
+	LPPER_IO_DATA hbInfo = (LPPER_IO_DATA)(lpOverlapped->hEvent);
+	SOCKET hSock = hbInfo->hClntSock;
+	LPWSABUF bufInfo = &(hbInfo->wsaBuf);
+	DWORD sentBytes;
+
+	if (szRecvBytes == 0)
+	{
+		closesocket(hSock);
+		free(lpOverlapped->hEvent);
+		free(lpOverlapped);
+		puts("Client disconnected....");
+	}
+	else
+	{
+		bufInfo->len = szRecvBytes;
+		WSASend(hSock, bufInfo, 1, &sentBytes, 0, lpOverlapped, WriteCompRoutine);
+	}
+}
+
+void CALLBACK WriteCompRoutine(DWORD dwError, DWORD szSendBytes, LPWSAOVERLAPPED lpOverlapped, DWORD flags)
+{
+	LPPER_IO_DATA hbInfo = (LPPER_IO_DATA)(lpOverlapped->hEvent);
+	SOCKET hSock = hbInfo->hClntSock;
+	LPWSABUF bufInfo = &(hbInfo->wsaBuf);
+	DWORD recvBytes;
+	int flagInfo = 0;
+	WSARecv(hSock, bufInfo, 1, &recvBytes, (LPDWORD) &flagInfo, lpOverlapped, ReadCompRoutine);
+}
+
+void ErrorHandling(const char *message)
+{
+	fputs(message, stderr);
+	fputc('\n', stderr);
+	exit(1);
 }
