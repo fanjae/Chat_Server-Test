@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
 	{
 		ErrorHandling("listen() error");
 	}
+
 	recvAdrSz = sizeof(recvAdr);
 	while (1)
 	{
@@ -68,10 +69,11 @@ int main(int argc, char *argv[])
 			{
 				ErrorHandling("Accept() Error");
 			}
-			puts("Client Connected....");
-			lpOvLp = (LPWSAOVERLAPPED)malloc(sizeof(WSAOVERLAPPED));
-			memset(lpOvLp, 0, sizeof(WSAOVERLAPPED));
 		}
+		puts("Client Connected....");
+		lpOvLp = (LPWSAOVERLAPPED)malloc(sizeof(WSAOVERLAPPED));
+		memset(lpOvLp, 0, sizeof(WSAOVERLAPPED));
+
 		hbInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
 		hbInfo->hClntSock = (DWORD)hRecvSock;
 		(hbInfo->wsaBuf).buf = hbInfo->buf;
