@@ -16,6 +16,8 @@ typedef struct
 	char buf[BUF_SIZE];
 	WSABUF wsaBuf;
 } PER_IO_DATA, *LPPER_IO_DATA;
+/* 소켓의 핸들과 버퍼,
+버퍼 관련 정보를 담는 WSABUF형 변수 */
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +41,7 @@ int main(int argc, char *argv[])
 
 	hLisnSock = WSASocket(PF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	ioctlsocket(hLisnSock, FIONBIO, (u_long *)&mode); // for non-blocking mode socket
+	// hLisnSock을 Non Blocking Mode로 변환.
 
 	memset(&lisnAdr, 0, sizeof(lisnAdr));
 	lisnAdr.sin_family = AF_INET;
@@ -58,10 +61,10 @@ int main(int argc, char *argv[])
 	while (1)
 	{
 		SleepEx(100, TRUE);
-		hRecvSock = accept(hLisnSock, (SOCKADDR*)&recvAdr, &recvAdrSz);
-		if (hRecvSock == INVALID_SOCKET)
+		hRecvSock = accept(hLisnSock, (SOCKADDR*)&recvAdr, &recvAdrSz); 
+		if (hRecvSock == INVALID_SOCKET) 
 		{
-			if (WSAGetLastError() == WSAEWOULDBLOCK)
+			if (WSAGetLastError() == WSAEWOULDBLOCK) 
 			{
 				continue;
 			}
@@ -71,7 +74,7 @@ int main(int argc, char *argv[])
 			}
 		}
 		puts("Client Connected....");
-		lpOvLp = (LPWSAOVERLAPPED)malloc(sizeof(WSAOVERLAPPED));
+		lpOvLp = (LPWSAOVERLAPPED)malloc(sizeof(WSAOVERLAPPED)); // Overlapped IO에 필요한 구조체 변수 할당 및 초기화
 		memset(lpOvLp, 0, sizeof(WSAOVERLAPPED));
 
 		hbInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
