@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
 	ioctlsocket(hLisnSock, FIONBIO, (u_long *)&mode); // for non-blocking mode socket
 	// hLisnSock을 Non Blocking Mode로 변환.
 
+
 	memset(&lisnAdr, 0, sizeof(lisnAdr));
 	lisnAdr.sin_family = AF_INET;
 	lisnAdr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -75,14 +76,18 @@ int main(int argc, char *argv[])
 		}
 		puts("Client Connected....");
 		lpOvLp = (LPWSAOVERLAPPED)malloc(sizeof(WSAOVERLAPPED)); // Overlapped IO에 필요한 구조체 변수 할당 및 초기화
-		memset(lpOvLp, 0, sizeof(WSAOVERLAPPED));
+		memset(lpOvLp, 0, sizeof(WSAOVERLAPPED)); 
 
-		hbInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
+		hbInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA)); // PER_IO_DATA 구조체 변수 동적 할당 및 할당된 소켓의 핸들 정보 저장.
 		hbInfo->hClntSock = (DWORD)hRecvSock;
 		(hbInfo->wsaBuf).buf = hbInfo->buf;
 		(hbInfo->wsaBuf).len = BUF_SIZE;
-		lpOvLp->hEvent = (HANDLE)hbInfo;
+
+		lpOvLp->hEvent = (HANDLE)hbInfo; // hEvent에 할당한 변수의 주소값 저장.
 		WSARecv(hRecvSock, &(hbInfo->wsaBuf), 1, &recvBytes, (LPDWORD) &flagInfo, lpOvLp, ReadCompRoutine);
+		// WSARecv함수를 호출하면서 ReadCompRoutine 함수를 Completion Routine으로 지정함.
+		// WSAOVERLAPPED 구조체 변수의 주소값은 Completion Routine의 세번째 매개변수에 전달됨.
+
 	}
 	closesocket(hRecvSock);
 	closesocket(hLisnSock);
