@@ -94,8 +94,13 @@ int main(int argc, char *argv[])
 	WSACleanup();
 	return 0;
 }
+
+// 데이터의 입력이 완료됨. 수신된 데이터를 에코 클라이언트에게 전송해야함.
 void CALLBACK ReadCompRoutine(DWORD dwError, DWORD szRecvBytes, LPWSAOVERLAPPED lpOverlapped, DWORD flags)
 {
+
+	// 입력이 완료된 소켓의 핸들정보와 버퍼정보를 추출
+	// PER_IO_DATA 구조체 변수의 주소값을 WSAOVERLAPPED 구조체 변수의 멤버 hEvent에 저장했기 때문.
 	LPPER_IO_DATA hbInfo = (LPPER_IO_DATA)(lpOverlapped->hEvent);
 	SOCKET hSock = hbInfo->hClntSock;
 	LPWSABUF bufInfo = &(hbInfo->wsaBuf);
