@@ -106,6 +106,8 @@ void CALLBACK ReadCompRoutine(DWORD dwError, DWORD szRecvBytes, LPWSAOVERLAPPED 
 	LPWSABUF bufInfo = &(hbInfo->wsaBuf);
 	DWORD sentBytes;
 
+
+	// 0이 전달되었다는 뜻은 EOF의 수신을 의미함.
 	if (szRecvBytes == 0)
 	{
 		closesocket(hSock);
@@ -115,6 +117,8 @@ void CALLBACK ReadCompRoutine(DWORD dwError, DWORD szRecvBytes, LPWSAOVERLAPPED 
 	}
 	else
 	{
+		// WriteCompRoutine 함수를  Completion Routine으로 지정.
+		// 이 문장에 의해 Echo Message 전송
 		bufInfo->len = szRecvBytes;
 		WSASend(hSock, bufInfo, 1, &sentBytes, 0, lpOverlapped, WriteCompRoutine);
 	}
