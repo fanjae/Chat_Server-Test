@@ -124,6 +124,8 @@ void CALLBACK ReadCompRoutine(DWORD dwError, DWORD szRecvBytes, LPWSAOVERLAPPED 
 	}
 }
 
+// Echo Message 전송 이후 해당 함수 실행.
+// 데이터를 다시 수신하기 위해 30행의 함수 호출 진행.
 void CALLBACK WriteCompRoutine(DWORD dwError, DWORD szSendBytes, LPWSAOVERLAPPED lpOverlapped, DWORD flags)
 {
 	LPPER_IO_DATA hbInfo = (LPPER_IO_DATA)(lpOverlapped->hEvent);
@@ -132,6 +134,8 @@ void CALLBACK WriteCompRoutine(DWORD dwError, DWORD szSendBytes, LPWSAOVERLAPPED
 	DWORD recvBytes;
 	int flagInfo = 0;
 	WSARecv(hSock, bufInfo, 1, &recvBytes, (LPDWORD) &flagInfo, lpOverlapped, ReadCompRoutine);
+	
+	
 }
 
 void ErrorHandling(const char *message)
@@ -140,3 +144,11 @@ void ErrorHandling(const char *message)
 	fputc('\n', stderr);
 	exit(1);
 }
+
+/* 
+1. 클라이언트가 연결되면 WSARecv 함수 호출. Non Blocking Mode로 데이터 수신.
+2. 수신이 완료되면 ReadCompRoutine 호출.
+3. ReadCompRoutine 함수가 호출되면 WSASend 함수를 호출하면 Non Blocking Mode로 데이터가 송신.
+4. 송신이 완료되면 WriteCompRutine 함수 호출.
+5. WriteCompRoutine 함수는 WSARecv 함수 재호출. Non Blocking Mode로 수신을 다시 기다림.*/
+
