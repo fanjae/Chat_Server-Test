@@ -4,6 +4,9 @@
 #include <winsock2.h>
 #include <windows.h>
 
+#pragma warning (disable:4996)
+#pragma commnet (lib,"ws2_32.lib")
+
 #define BUF_SIZE 100
 #define READ 3
 #define WRITE 5
