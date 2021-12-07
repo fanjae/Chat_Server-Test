@@ -30,6 +30,8 @@ typedef struct // buffer info
 
 // IO에 사용되는 버퍼
 // Overlapped I/O 에 반드시 필요한 Overlapped 구조체 변수를 담아서 구조체를 정의하였다.
+// 구조체 변수의 주소값은 구조체 첫 번째 멤버의 주소값과 일치.
+
 
 DWORD WINAPI EchoThreadMain(LPVOID CompletionPortIO);
 void ErrorHandling(const char *message);
@@ -50,12 +52,16 @@ int main(int argc, char *argv[])
 		ErrorHandling("WSAStartup() Error");
 	}
 
-	hComPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-	GetSystemInfo(&sysInfo);
-	for (i = 0; i < sysInfo.dwNumberOfProcessors; i++)
+	hComPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0); // CP 오브젝트 생성 , 코어의 수 만큼 쓰레드가 CP 오브젝트에 할당 가능.
+	GetSystemInfo(&sysInfo); // 현재 실행중인 시스템 정보 확인
+	for (i = 0; i < sysInfo.dwNumberOfProcessors; i++) 
 	{
 		_beginthreadex(NULL, 0, EchoThreadMain, (LPVOID)hComPort, 0, NULL);
 	}
+	/* dwNumberOfProcessor : CPU 수 저장.
+	CPU의 수 만큼 쓰레드 생성 후. 15행에서 생성한 CP 오브젝트 핸들 전달.
+	쓰레드는 위 핸들로 인해 CP 오브젝트에 할당
+	*/
 
 	hServSock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 	memset(&servAdr, 0, sizeof(servAdr));
@@ -77,14 +83,36 @@ int main(int argc, char *argv[])
 		handleInfo->hClntSock = hClntSock;
 		memcpy(&(handleInfo->clntAdr), &clntAdr, addrLen);
 
-		CreateIoCompletionPort((HANDLE)hClntSock, hComPort, (DWORD)handleInfo, 0);
+		// PER_HANDLE_DATA 구조체 변수를 동적 할당 이후 클라이언트와 연결된 소켓, 클라이언트 주소 정보 할당.
 
-		ioInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
+		CreateIoCompletionPort((HANDLE)hClntSock, hComPort, (DWORD)handleInfo, 0); 
+		/* 81번째 행에서 생성된 소켓 연결. Overlapped IO가 완료시 연결된 CP 오브젝트에 완료된 정보 할당함. */
+
+		ioInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA)); // PER_IO_DATA 구조체 변수 동적 할당. WSARecv 함수 호출에 필요한 Data들을 한번에 가지고옴.
 		memset(&(ioInfo->overlapped), 0, sizeof(OVERLAPPED));
 		ioInfo->wsaBuf.len = BUF_SIZE;
 		ioInfo->wsaBuf.buf = ioInfo->buffer;
-		ioInfo->rwMode = READ;
+		ioInfo->rwMode = READ; // IOCP는 입력 출력의 완료를 구분지어주지 않음. 따라서 이를 별도로 기록해둬야한다. PER_IO_DATA의 rwMode가 바로 이러한 목적으로 삽입.
 		WSARecv(handleInfo->hClntSock, &(ioInfo->wsaBuf), 1, &recvBytes, &flags, &(ioInfo->overlapped), NULL);
+
+		// OVERLAPPED 구조체 변수의 주소값을 전달. 이 값은 getQueued 함수가 반환하며 얻을 수 있음.
+		// 이는 PER_IO_DATA 구조체 변수의 주소값을 전달한 것과 동일.
 	}
 	return 0;
+}
+
+DWORD WINAPI EchoThreadMain(LPVOID pComPort)
+{
+	HANDLE hComPort = (HANDLE)pComPort;
+	SOCKET sock;
+	DWORD bytesTrans;
+	LPPER_HANDLE_DATA handleInfo;
+	DWORD flags = 0;
+
+	/*
+	while(1)
+	{
+		GetQueuedCompletionStatus(hComPort, &bytesTrans, (LPDWORD)&handleInfo, (LPOVERLAPPED*)&ioInfo, INFINITE);
+	}
+	*/
 }
