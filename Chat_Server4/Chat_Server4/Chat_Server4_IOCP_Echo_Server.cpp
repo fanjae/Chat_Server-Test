@@ -17,6 +17,9 @@ typedef struct // socket info
 	SOCKADDR_IN clntAdr;
 } PER_HANDLE_DATA, *LPPER_HANDLE_DATA;
 
+// 클라이언트와 연결된 소켓정보를 담기 위한 구조체
+// 변수가 언제할당되고 어떻게 전달되고 어떻게 활용되는지 관찰
+
 typedef struct // buffer info
 {
 	OVERLAPPED overlapped;
@@ -24,6 +27,9 @@ typedef struct // buffer info
 	char buffer[BUF_SIZE];
 	int rwMode; // READ or WRITE
 } PER_IO_DATA, *LPPER_IO_DATA;
+
+// IO에 사용되는 버퍼
+// Overlapped I/O 에 반드시 필요한 Overlapped 구조체 변수를 담아서 구조체를 정의하였다.
 
 DWORD WINAPI EchoThreadMain(LPVOID CompletionPortIO);
 void ErrorHandling(const char *message);
