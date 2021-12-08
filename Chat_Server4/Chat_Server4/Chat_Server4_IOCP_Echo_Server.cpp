@@ -5,7 +5,7 @@
 #include <windows.h>
 
 #pragma warning (disable:4996)
-#pragma commnet (lib,"ws2_32.lib")
+#pragma comment (lib,"ws2_32.lib")
 
 #define BUF_SIZE 100
 #define READ 3
@@ -32,7 +32,6 @@ typedef struct // buffer info
 // Overlapped I/O 에 반드시 필요한 Overlapped 구조체 변수를 담아서 구조체를 정의하였다.
 // 구조체 변수의 주소값은 구조체 첫 번째 멤버의 주소값과 일치.
 
-
 DWORD WINAPI EchoThreadMain(LPVOID CompletionPortIO);
 void ErrorHandling(const char *message);
 
@@ -56,7 +55,7 @@ int main(int argc, char *argv[])
 	GetSystemInfo(&sysInfo); // 현재 실행중인 시스템 정보 확인
 	for (i = 0; i < sysInfo.dwNumberOfProcessors; i++) 
 	{
-		_beginthreadex(NULL, 0, EchoThreadMain, (LPVOID)hComPort, 0, NULL);
+		_beginthreadex(NULL, 0, (_beginthreadex_proc_type) EchoThreadMain, (LPVOID)hComPort, 0, NULL);
 	}
 	/* dwNumberOfProcessor : CPU 수 저장.
 	CPU의 수 만큼 쓰레드 생성 후. 15행에서 생성한 CP 오브젝트 핸들 전달.
@@ -93,7 +92,7 @@ int main(int argc, char *argv[])
 		ioInfo->wsaBuf.len = BUF_SIZE;
 		ioInfo->wsaBuf.buf = ioInfo->buffer;
 		ioInfo->rwMode = READ; // IOCP는 입력 출력의 완료를 구분지어주지 않음. 따라서 이를 별도로 기록해둬야한다. PER_IO_DATA의 rwMode가 바로 이러한 목적으로 삽입.
-		WSARecv(handleInfo->hClntSock, &(ioInfo->wsaBuf), 1, &recvBytes, &flags, &(ioInfo->overlapped), NULL);
+		WSARecv(handleInfo->hClntSock, &(ioInfo->wsaBuf), 1, (LPDWORD) &recvBytes, (LPDWORD) &flags, &(ioInfo->overlapped), NULL);
 
 		// OVERLAPPED 구조체 변수의 주소값을 전달. 이 값은 getQueued 함수가 반환하며 얻을 수 있음.
 		// 이는 PER_IO_DATA 구조체 변수의 주소값을 전달한 것과 동일.
@@ -107,6 +106,7 @@ DWORD WINAPI EchoThreadMain(LPVOID pComPort)
 	SOCKET sock;
 	DWORD bytesTrans;
 	LPPER_HANDLE_DATA handleInfo;
+	LPPER_IO_DATA ioInfo;
 	DWORD flags = 0;
 
 	
@@ -129,16 +129,26 @@ DWORD WINAPI EchoThreadMain(LPVOID pComPort)
 			memset(&(ioInfo->overlapped), 0, sizeof(OVERLAPPED));
 			ioInfo->wsaBuf.len = bytesTrans;
 			ioInfo->rwMode = WRITE;
-			WSASend(sock, &(ioInfo->wsabuf), 1, NULL, 0, &(ioInfo->overlapped), NULL);
+			WSASend(sock, &(ioInfo->wsaBuf), 1, NULL, 0, &(ioInfo->overlapped), NULL);
 
 			ioInfo = (LPPER_IO_DATA)malloc(sizeof(PER_IO_DATA));
 			memset(&(ioInfo->overlapped), 0, sizeof(OVERLAPPED));
 			ioInfo->wsaBuf.len = BUF_SIZE;
-			ioInfo->wsabuf.buf = ioInfo->buffer;
+			ioInfo->wsaBuf.buf = ioInfo->buffer;
 			ioInfo->rwMode = READ;
 			WSARecv(sock, &(ioInfo->wsaBuf), 1, NULL, &flags, &(ioInfo->overlapped), NULL);
 		}
-
+		else
+		{
+			puts("message sent!");
+		}
 	}
-	
+	return 0;
+}
+
+void ErrorHandling(const char *message)
+{
+	fputs(message, stderr);
+	fputc('\n', stderr);
+	exit(1);
 }
