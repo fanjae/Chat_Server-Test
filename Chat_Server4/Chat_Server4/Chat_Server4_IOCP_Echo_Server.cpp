@@ -7,7 +7,7 @@
 #pragma warning (disable:4996)
 #pragma comment (lib,"ws2_32.lib")
 
-#define BUF_SIZE 100
+#define BUF_SIZE 1000
 #define READ 3
 #define WRITE 5
 
@@ -32,7 +32,7 @@ typedef struct // buffer info
 // Overlapped I/O 에 반드시 필요한 Overlapped 구조체 변수를 담아서 구조체를 정의하였다.
 // 구조체 변수의 주소값은 구조체 첫 번째 멤버의 주소값과 일치.
 
-DWORD WINAPI EchoThreadMain(LPVOID CompletionPortIO);
+unsigned int WINAPI EchoThreadMain(LPVOID CompletionPortIO);
 void ErrorHandling(const char *message);
 
 int main(int argc, char *argv[])
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	GetSystemInfo(&sysInfo); // 현재 실행중인 시스템 정보 확인
 	for (i = 0; i < sysInfo.dwNumberOfProcessors; i++) 
 	{
-		_beginthreadex(NULL, 0, (_beginthreadex_proc_type) EchoThreadMain, (LPVOID)hComPort, 0, NULL);
+		_beginthreadex(NULL, 0, EchoThreadMain, (LPVOID)hComPort, 0, NULL);
 	}
 	/* dwNumberOfProcessor : CPU 수 저장.
 	CPU의 수 만큼 쓰레드 생성 후. 15행에서 생성한 CP 오브젝트 핸들 전달.
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-DWORD WINAPI EchoThreadMain(LPVOID pComPort)
+unsigned int WINAPI EchoThreadMain(LPVOID pComPort)
 {
 	HANDLE hComPort = (HANDLE)pComPort;
 	SOCKET sock;
@@ -109,7 +109,6 @@ DWORD WINAPI EchoThreadMain(LPVOID pComPort)
 	LPPER_IO_DATA ioInfo;
 	DWORD flags = 0;
 
-	
 	while(1)
 	{
 		GetQueuedCompletionStatus(hComPort, &bytesTrans, (LPDWORD)&handleInfo, (LPOVERLAPPED*)&ioInfo, INFINITE);
@@ -141,6 +140,7 @@ DWORD WINAPI EchoThreadMain(LPVOID pComPort)
 		else
 		{
 			puts("message sent!");
+			free(ioInfo);
 		}
 	}
 	return 0;
